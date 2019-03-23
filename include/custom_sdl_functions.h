@@ -27,5 +27,6 @@ void shift_pixels_vertical(SDL_Surface* target, bool up, SDL_Rect* clip = nullpt
 	Set clip to non null if you wish to only apply this effect within a clipped part of surface.
 */
 void shift_pixels_horizontal(SDL_Surface* target, bool right, SDL_Rect* clip = nullptr);
+void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip = nullptr);
 
 #endif // CUSTOM_SDL_FUNCTIONS_H
