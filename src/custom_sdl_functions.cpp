@@ -52,16 +52,21 @@ void findSameNextPlace(int* x, int* y, int w, int h, int val, int* tiles, Search
 				--*y;
 				return;
 			}
-			if ((lx + modx >= 0 && lx + modx < w) && tiles[((ly - 1) * w) + lx + modx] == val)
+			if (lx + modx >= 0 && lx + modx < w)
 			{
-				--*y;
-				*x += modx;
-				return;
+				if (tiles[((ly - 1) * w) + lx + modx] == val)
+				{
+					--*y;
+					*x += modx;
+					return;
+				}
+				if (upval < val)
+				{
+					*x += modx;
+					return;
+				}
 			}
-			if (upval > val)
-				*x += modx;
-			else
-				--*y;
+			--*y;
 			return;
 		}
 		*x += modx;
@@ -77,16 +82,21 @@ void findSameNextPlace(int* x, int* y, int w, int h, int val, int* tiles, Search
 				++*y;
 				return;
 			}
-			if ((lx + modx >= 0 && lx + modx < w) && tiles[((ly + 1) * w) + lx + modx] == val)
+			if (lx + modx >= 0 && lx + modx < w)
 			{
-				++*y;
-				x += modx;
-				return;
+				if(tiles[((ly + 1) * w) + lx + modx] == val)
+				{
+					++*y;
+					*x += modx;
+					return;
+				}
+				if (dval < val)
+				{
+					*x += modx;
+					return;
+				}
 			}
-			if (dval > val)
-				*x += modx;
-			else
-				++*y;
+			++*y;
 			return;
 		}
 		*x += modx;
@@ -95,6 +105,8 @@ void findSameNextPlace(int* x, int* y, int w, int h, int val, int* tiles, Search
 
 void findNewPosForSpinningPixel(int* x, int* y, int surface_w, int surface_h, int steps, int* tiles, bool right, SDL_Rect* clip)
 {
+	if (steps <= 0)
+		return;
 	int cw = surface_w;
 	int ch = surface_h;
 	int cx = *x;
@@ -117,7 +129,7 @@ void findNewPosForSpinningPixel(int* x, int* y, int surface_w, int surface_h, in
 			cx -= clip->x;
 			cy -= clip->y;
 		}
-		// (x < w/2) left Sector, (x >= (double)w/2) right Sector, (y < h/2) top Sector, (y >= (double)w/2) bottom Sector
+		// (x < w/2) left Sector, (x >= (double)w/2) right Sector, (y < h/2) top Sector, (y >= (double)h/2) bottom Sector
 		if (cx < cw/2)
 		{
 			if (right)
@@ -136,21 +148,43 @@ void findNewPosForSpinningPixel(int* x, int* y, int surface_w, int surface_h, in
 		}
 		if (cy < ch/2)
 		{
-			if (right)
-				++*x;
+			int xmod = right ? 1 : -1;
+			if (tiles[(cy * cw) + cx + xmod] > val)
+				*x += xmod;
+			else if (tiles[((cy + 1) * cw) + cx + xmod] == val)
+			{
+				*x += xmod;
+				++*y;
+			}
 			else
-				--*x;
+				++*y;
 		}
 		else if (cy >= (double)ch/2)
 		{
-			if (right)
-				--*x;
+			int xmod = right ? -1 : 1;
+			if (tiles[(cy * cw) + cx + xmod] > val)
+				*x += xmod;
+			else if (tiles[((cy - 1) * cw) + cx + xmod] == val)
+			{
+				*x += xmod;
+				--*y;
+			}
 			else
-				++*x;
+				--*y;
 		}
 		else
 			return;
 	}
+}
+
+template<class T>
+void array_flip(T* array, int w)
+{
+	T inverse[w];
+	for (int i = 0; i < w; i++)
+		inverse[w - 1 - i] = array[i];
+	for (int i = 0; i < w; i++)
+		array[i] = inverse[i];
 }
 
 //DEFINED FUNCTIONS
@@ -321,7 +355,7 @@ void shift_pixels_horizontal(SDL_Surface* target, bool right, SDL_Rect* clip)
 
 void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 {
-	int w(0), h(0), yInTarget(0), xInTarget(0);
+	int w(0), h(0), yInTarget(0), xInTarget(0), steps(0);
 	if (degrees > 360)
 		degrees = 360;
 	bool right = degrees > 180;
@@ -331,6 +365,7 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 	{
 		w = target->w;
 		h = target->h;
+		steps = w + h - 2;
 	}
 	else
 	{
@@ -338,18 +373,32 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 		yInTarget = clip->y;
 		w = xInTarget + clip->w;
 		h = yInTarget + clip->h;
+		steps = clip->w + clip->h - 2;
 	}
 	//How many steps the fastest moving pixels of the image will need to spin 180 degrees
-	int steps = w + h - 2;
 	double perc = (double)degrees / 180;
 	steps = perc * steps;
 	Uint32* pixelsOld = (Uint32*)target->pixels;
 	Uint32 pixelsNew[target->w * target->h];
-	for (int i = 0; i < target->w * target->h; i++)
-		pixelsNew[i] = pixelsOld[i];
-	int tiles[target->w * target->h];
 	int actualw = clip == nullptr ? w : clip->w;
 	int actualh = clip == nullptr ? h : clip->h;
+	for (int i = 0; i < target->w * target->h; i++)
+		pixelsNew[i] = pixelsOld[i];
+	if (w == 1)
+	{
+		if (clip == nullptr)
+			array_flip<Uint32>(pixelsOld, h);
+		else
+		{
+			Uint32 inverse[h];
+			for (int i = 0; i < h; i++)
+				inverse[i] = pixelsOld[((h - i - 1) * target->w) + xInTarget];
+			for (int i = 0; i < h; i ++)
+				pixelsOld[((i) * target->w) + xInTarget] = inverse[i];
+		}
+		return;
+	}
+	int tiles[actualw * actualh];
 	for (int x = 0; x < actualw; x++)
 		for (int y = 0; y < actualh; y++)
 			tiles[(y * actualw) + x] = calculateSpinValueForPixel(x, y, actualw, actualh);
@@ -362,6 +411,7 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 			int newYpos = y;
 			findNewPosForSpinningPixel(&newXpos, &newYpos, target->w, target->h, steps, tiles, right, clip);
 			pixelsNew[(newYpos * target->w) + newXpos] = oldPixel;
+			//std::cout << "oldx: " << x << " newx: " << newXpos << " oldy: " << y << " newy: " << newYpos << std::endl;
 		}
 	}
 	for (int x = 0; x < target->w; x++)
