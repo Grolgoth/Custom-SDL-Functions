@@ -22,6 +22,16 @@ void put_pixel32( SDL_Surface *surface, int x, int y, Uint32 pixel )
     pixels[(y * surface->w)+x] = pixel;
 }
 
+template<class T>
+void array_flip(T* array, int w)
+{
+	T inverse[w];
+	for (int i = 0; i < w; i++)
+		inverse[w - 1 - i] = array[i];
+	for (int i = 0; i < w; i++)
+		array[i] = inverse[i];
+}
+
 int calculateSpinValueForPixel(int x, int y, int surface_w, int surface_h)
 {
 	int w = surface_w;
@@ -177,14 +187,60 @@ void findNewPosForSpinningPixel(int* x, int* y, int surface_w, int surface_h, in
 	}
 }
 
-template<class T>
-void array_flip(T* array, int w)
+int calculateTileSettings(int w, int h, int* numspins, int* distinctTiles, bool wUneven, bool hUneven)
 {
-	T inverse[w];
-	for (int i = 0; i < w; i++)
-		inverse[w - 1 - i] = array[i];
-	for (int i = 0; i < w; i++)
-		array[i] = inverse[i];
+	penalty = 0;
+	if (wUneven)
+	{
+		penalty ++;
+		*distinctTiles += (w / 2) + 1;
+	}
+	else
+		*distinctTiles += w / 2;
+	if (hUneven)
+	{
+		penalty ++;
+		*distinctTiles += (h / 2) + 1;
+	}
+	else
+		*distinctTiles += h / 2;
+	if (w >= h)
+		*numspins = 2 * h + penalty;
+	else
+		*numspins = 2 * w + penalty;
+}
+
+bool dimensionCheck(int w, int h, Uint32* pixelsOld, SDL_Rect* clip, SDL_Surface* target)
+{
+	if (w == 1)
+	{
+		if (clip == nullptr)
+			array_flip<Uint32>(pixelsOld, h);
+		else
+		{
+			Uint32 inverse[h];
+			for (int i = 0; i < h; i++)
+				inverse[i] = pixelsOld[((h - i - 1) * target->w) + clip->x];
+			for (int i = 0; i < h; i ++)
+				pixelsOld[(i * target->w) + clip->x] = inverse[i];
+		}
+		return true;
+	}
+	else if (h == 1)
+	{
+		if (clip == nullptr)
+			array_flip<Uint32>(pixelsOld, h);
+		else
+		{
+			Uint32 inverse[w];
+			for (int i = 0; i < w; i++)
+				inverse[i] = pixelsOld[(clip->y * target->w) + clip->x + i];
+			for (int i = 0; i < w; i ++)
+				pixelsOld[(clip->y * target->w) + clip->x + i] = inverse[i];
+		}
+		return true;
+	}
+	return false;
 }
 
 //DEFINED FUNCTIONS
@@ -384,20 +440,8 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 	int actualh = clip == nullptr ? h : clip->h;
 	for (int i = 0; i < target->w * target->h; i++)
 		pixelsNew[i] = pixelsOld[i];
-	if (w == 1)
-	{
-		if (clip == nullptr)
-			array_flip<Uint32>(pixelsOld, h);
-		else
-		{
-			Uint32 inverse[h];
-			for (int i = 0; i < h; i++)
-				inverse[i] = pixelsOld[((h - i - 1) * target->w) + xInTarget];
-			for (int i = 0; i < h; i ++)
-				pixelsOld[((i) * target->w) + xInTarget] = inverse[i];
-		}
+	if (dimensionCheck(actualw, actualh, pixelsOld, clip, target))
 		return;
-	}
 	int tiles[actualw * actualh];
 	for (int x = 0; x < actualw; x++)
 		for (int y = 0; y < actualh; y++)
@@ -416,4 +460,37 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 	for (int x = 0; x < target->w; x++)
 		for (int y = 0; y < target->h; y++)
 			put_pixel32(target, x, y, pixelsNew[(y * target->w) + x]);
+}
+
+void spin_surface_safe(SDL_Surface* target, unsigned int* previousSpins, SDL_Rect* clip = nullptr)
+{
+	int w(0), h(0), yInTarget(0), xInTarget(0), numspins(0), numDistinctTiles(0);
+	if (clip == nullptr)
+	{
+		w = target->w;
+		h = target->h;
+	}
+	else
+	{
+		xInTarget = clip->x;
+		yInTarget = clip->y;
+		w = clip->w;
+		h = clip->h;
+	}
+	if (dimensionCheck(w, h, (Uint32*)target->pixels, clip, target))
+		return;
+	bool wUneven = w % 2 != 0;
+	bool hUneven = h % 2 != 0;
+	int tiles[w * h];
+	for (int x = 0; x < w; x++)
+		for (int y = 0; y < h; y++)
+			tiles[(y * w) + x] = calculateSpinValueForPixel(x, y, w, h);
+	// numspins = the number of steps it takes to spin the largest fully connected circle 360 degrees
+	calculateTileSettings(w, h, &numspins, &numDistinctTiles, wUneven, hUneven);
+	if (*previousSpins == numspins)
+		*previousSpins = 0;
+	spinTileSet
+	if (previousSpins == 0 && wUneven)
+	if (previousSpins == numspins - 1 && hUneven)
+
 }
