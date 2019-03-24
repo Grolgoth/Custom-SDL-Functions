@@ -8,6 +8,7 @@
 */
 SDL_Surface* load_image(std::string filename, bool colorKey = true);
 SDL_Surface* createTransparentSurface(unsigned int w, unsigned int h);
+SDL_Surface* copy_surface(SDL_Surface* target, SDL_Rect* clip);
 SDL_Color createColor(int r, int g, int b, int a);
 /**
 	Blits source surface to target specified position of target surface. If clip != NULL only a clipped part of source surface will be blitted.
@@ -16,6 +17,10 @@ void apply_surface(int x, int y, SDL_Surface* source, SDL_Surface* destination, 
 /**
 	Sets all pixels of source color to target color for a given SDL_Surface*
 */
+/**
+	Sets all pixels in given area to 0 (transparent)
+*/
+void erase_surface(SDL_Surface* target, SDL_Rect* clip);
 void set_color(SDL_Surface *surface, SDL_Color source, SDL_Color targetColor);
 /**
 	Moves all pixels of surface up or down one row, and fills the bottom or top row that becomes free with transparent ones.

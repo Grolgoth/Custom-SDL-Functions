@@ -187,9 +187,9 @@ void findNewPosForSpinningPixel(int* x, int* y, int surface_w, int surface_h, in
 	}
 }
 
-int calculateTileSettings(int w, int h, int* numspins, int* distinctTiles, bool wUneven, bool hUneven)
+void calculateTileSettings(int w, int h, int* numspins, int* distinctTiles, bool wUneven, bool hUneven)
 {
-	penalty = 0;
+	int penalty = 0;
 	if (wUneven)
 	{
 		penalty ++;
@@ -276,6 +276,15 @@ return SDL_CreateRGBSurface(0,w,h,32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF00
 #endif
 }
 
+SDL_Surface* copy_surface(SDL_Surface* target, SDL_Rect* clip)
+{
+	int w = clip == nullptr ? target->w : clip->w;
+	int h = clip == nullptr ? target->h : clip->h;
+	SDL_Surface* result = createTransparentSurface(w, h);
+	apply_surface(0, 0, target, result, clip);
+	return result;
+}
+
 SDL_Color createColor(int r, int g, int b, int a)
 {
     SDL_Color C;
@@ -292,6 +301,24 @@ void apply_surface(int x, int y, SDL_Surface* source, SDL_Surface* destination, 
     offset.x = x;
     offset.y = y;
     SDL_BlitSurface( source, clip, destination, &offset );
+}
+
+void erase_surface(SDL_Surface* target, SDL_Rect* clip)
+{
+	int x(0), y(0), w(target->w), h(target->h);
+	if (clip == nullptr)
+	{
+		for (int i = 0; i < w * h; i++)
+			static_cast<Uint32*>(target->pixels)[i] = 0;
+		return;
+	}
+	x = clip->x;
+	y = clip->y;
+	w = x + clip->w;
+	h = y + clip->h;
+	for (int i = x; i < w; i++)
+		for (int j = y; j < h; j++)
+			static_cast<Uint32*>(target->pixels)[(j * target->w) + i] = 0;
 }
 
 void set_color(SDL_Surface *surface, SDL_Color source, SDL_Color targetColor)
@@ -411,6 +438,8 @@ void shift_pixels_horizontal(SDL_Surface* target, bool right, SDL_Rect* clip)
 
 void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 {
+	if (target->pitch > 50)
+		throw "Error: Due to sdl_functionality such as pixel pitch which creates skewed representations of rows and columns in a surface's pixel array this function should not be used for large images.";
 	int w(0), h(0), yInTarget(0), xInTarget(0), steps(0);
 	if (degrees > 360)
 		degrees = 360;
@@ -434,15 +463,21 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 	//How many steps the fastest moving pixels of the image will need to spin 180 degrees
 	double perc = (double)degrees / 180;
 	steps = perc * steps;
+	if (SDL_MUSTLOCK(target))
+		SDL_LockSurface(target);
 	Uint32* pixelsOld = (Uint32*)target->pixels;
-	Uint32 pixelsNew[target->w * target->h];
+	Uint32* pixelsNew = new Uint32[target->h * target->w];
 	int actualw = clip == nullptr ? w : clip->w;
 	int actualh = clip == nullptr ? h : clip->h;
 	for (int i = 0; i < target->w * target->h; i++)
 		pixelsNew[i] = pixelsOld[i];
 	if (dimensionCheck(actualw, actualh, pixelsOld, clip, target))
+	{
+		delete[] pixelsNew;
+		SDL_UnlockSurface(target);
 		return;
-	int tiles[actualw * actualh];
+	}
+	int* tiles = new int[actualw * actualh];
 	for (int x = 0; x < actualw; x++)
 		for (int y = 0; y < actualh; y++)
 			tiles[(y * actualw) + x] = calculateSpinValueForPixel(x, y, actualw, actualh);
@@ -460,11 +495,14 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 	for (int x = 0; x < target->w; x++)
 		for (int y = 0; y < target->h; y++)
 			put_pixel32(target, x, y, pixelsNew[(y * target->w) + x]);
+	delete[] tiles;
+	delete[] pixelsNew;
+	SDL_UnlockSurface(target);
 }
 
 void spin_surface_safe(SDL_Surface* target, unsigned int* previousSpins, SDL_Rect* clip = nullptr)
 {
-	int w(0), h(0), yInTarget(0), xInTarget(0), numspins(0), numDistinctTiles(0);
+	/*int w(0), h(0), yInTarget(0), xInTarget(0), numspins(0), numDistinctTiles(0);
 	if (clip == nullptr)
 	{
 		w = target->w;
@@ -491,6 +529,6 @@ void spin_surface_safe(SDL_Surface* target, unsigned int* previousSpins, SDL_Rec
 		*previousSpins = 0;
 	spinTileSet
 	if (previousSpins == 0 && wUneven)
-	if (previousSpins == numspins - 1 && hUneven)
+	if (previousSpins == numspins - 1 && hUneven)*/
 
 }
