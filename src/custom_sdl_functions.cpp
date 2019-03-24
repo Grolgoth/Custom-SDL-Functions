@@ -60,7 +60,7 @@ void findSameNextPlace(int* x, int* y, int w, int h, int val, int* tiles, Search
 					*x += modx;
 					return;
 				}
-				if (upval < val)
+				if (upval < val || tiles[(ly * w) + lx + modx] < upval)
 				{
 					*x += modx;
 					return;
@@ -90,7 +90,7 @@ void findSameNextPlace(int* x, int* y, int w, int h, int val, int* tiles, Search
 					*x += modx;
 					return;
 				}
-				if (dval < val)
+				if (dval < val || tiles[(ly * w) + lx + modx] < dval)
 				{
 					*x += modx;
 					return;
@@ -411,7 +411,6 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 			int newYpos = y;
 			findNewPosForSpinningPixel(&newXpos, &newYpos, target->w, target->h, steps, tiles, right, clip);
 			pixelsNew[(newYpos * target->w) + newXpos] = oldPixel;
-			//std::cout << "oldx: " << x << " newx: " << newXpos << " oldy: " << y << " newy: " << newYpos << std::endl;
 		}
 	}
 	for (int x = 0; x < target->w; x++)
