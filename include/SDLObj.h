@@ -1,5 +1,5 @@
-#ifndef SDL_H
-#define SDL_H
+#ifndef SDLOBJ_H
+#define SDLOBJ_H
 #include "custom_sdl_functions.h"
 
 class SDL
@@ -23,4 +23,4 @@ class SDL
 		SDL_Surface* target;
 };
 
-#endif // SDL_H
+#endif // SDLObj_H

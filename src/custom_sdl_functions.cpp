@@ -1,4 +1,5 @@
 #include "custom_sdl_functions.h"
+#include <cmath>
 
 //NON DEFINED FUCTIONS
 
@@ -187,29 +188,6 @@ void findNewPosForSpinningPixel(int* x, int* y, int surface_w, int surface_h, in
 	}
 }
 
-void calculateTileSettings(int w, int h, int* numspins, int* distinctTiles, bool wUneven, bool hUneven)
-{
-	int penalty = 0;
-	if (wUneven)
-	{
-		penalty ++;
-		*distinctTiles += (w / 2) + 1;
-	}
-	else
-		*distinctTiles += w / 2;
-	if (hUneven)
-	{
-		penalty ++;
-		*distinctTiles += (h / 2) + 1;
-	}
-	else
-		*distinctTiles += h / 2;
-	if (w >= h)
-		*numspins = 2 * h + penalty;
-	else
-		*numspins = 2 * w + penalty;
-}
-
 bool dimensionCheck(int w, int h, Uint32* pixelsOld, SDL_Rect* clip, SDL_Surface* target)
 {
 	if (w == 1)
@@ -241,6 +219,35 @@ bool dimensionCheck(int w, int h, Uint32* pixelsOld, SDL_Rect* clip, SDL_Surface
 		return true;
 	}
 	return false;
+}
+
+template<class T>
+std::vector<T> vector_flip(std::vector<T> target)
+{
+	std::vector<T> result = target;
+	for (unsigned int i = 0; i < target.size(); i++)
+		result[target.size() - 1 - i] = target[i];
+	return result;
+}
+
+template <class T>
+std::vector<T> mergeVectors(std::vector<T> first, std::vector<T> second)
+{
+    std::vector<T> result = first;
+    for (unsigned int i = 0; i < second.size(); i++)
+        result.push_back(second[i]);
+    return result;
+}
+
+std::vector<int> syncVectors(std::vector<int> first, std::vector<int> second)
+{
+    if (first[0] == second[0])
+    {
+        first.erase(first.begin());
+        second.pop_back();
+    }
+    second = vector_flip(second);
+    return mergeVectors(first, second);
 }
 
 //DEFINED FUNCTIONS
@@ -293,6 +300,58 @@ SDL_Color createColor(int r, int g, int b, int a)
     C.g = g;
     C.a = a;
     return C;
+}
+
+std::vector<std::vector<int>> getTileSetsOfSurface(int w, int h, int* numSpins)
+{
+    std::vector<std::vector<int>> result;
+    short hor = w;
+    short v = h;
+    for (int i = 0; i <= ceil(hor / 2.0); i++)
+    {
+        std::vector<int> lefts;
+        std::vector<int> rights;
+        for (int j = 0; j < v; j ++)
+        {
+            if ((j < i || j >= v - i) && i != 0)
+            {
+                int mod = 0;
+                if (j + 1 > v / 2)
+                    mod = v - 1 - j;
+                else
+                    mod = j;
+                lefts.push_back(j * hor - 1 + i - mod);
+                rights.push_back(j * hor + hor - i + mod);
+            }
+            else if (j <= ceil(v / 2.0) - 1 && i == 0 && j > 0)
+            {
+                lefts.clear();
+                rights.clear();
+                for (int j2 = j; j2 < v; j2++)
+                {
+                    int mod = 0;
+                    if (j2 + 1 > v / 2)
+                        mod = v - 1 - j2 - j;
+                    else
+                        mod = j2 - j;
+                    if (mod >= 0 && mod < ceil(hor / 2.0))
+                    {
+                        if ( (j2 + 1 <= v / 2 && j2 < j + ceil(hor / 2.0)) || (j2 + 1 > v / 2 && v - 1 - j2 < j + ceil(hor/2.0)) )
+                            lefts.push_back(j2 * hor - 1 + ceil(hor / 2.0) - mod);
+                            rights.push_back(j2 * hor + hor - ceil(hor / 2.0) + mod);
+                    }
+                }
+                result.push_back(syncVectors(lefts, rights));
+            }
+        }
+        if (i != 0)
+            result.push_back(syncVectors(lefts, rights));
+    }
+    if (w > h)
+        *numSpins = 2 * h;
+    else
+        *numSpins = 2 * w;
+    return result;
 }
 
 void apply_surface(int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip)
@@ -438,7 +497,7 @@ void shift_pixels_horizontal(SDL_Surface* target, bool right, SDL_Rect* clip)
 
 void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 {
-	if (target->pitch > 50)
+	if (target->pitch > 150)
 		throw "Error: Due to sdl_functionality such as pixel pitch which creates skewed representations of rows and columns in a surface's pixel array this function should not be used for large images.";
 	int w(0), h(0), yInTarget(0), xInTarget(0), steps(0);
 	if (degrees > 360)
@@ -500,9 +559,9 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 	SDL_UnlockSurface(target);
 }
 
-void spin_surface_safe(SDL_Surface* target, unsigned int* previousSpins, SDL_Rect* clip = nullptr)
+void spin_surface_safe(SDL_Surface* target, unsigned int* previousSpins, unsigned int turns, std::vector<std::vector<int>> tileSets, SDL_Rect* clip)
 {
-	/*int w(0), h(0), yInTarget(0), xInTarget(0), numspins(0), numDistinctTiles(0);
+	int w(0), h(0), yInTarget(0), xInTarget(0), numspins(0), numDistinctTiles(0);
 	if (clip == nullptr)
 	{
 		w = target->w;
@@ -517,18 +576,17 @@ void spin_surface_safe(SDL_Surface* target, unsigned int* previousSpins, SDL_Rec
 	}
 	if (dimensionCheck(w, h, (Uint32*)target->pixels, clip, target))
 		return;
-	bool wUneven = w % 2 != 0;
-	bool hUneven = h % 2 != 0;
-	int tiles[w * h];
-	for (int x = 0; x < w; x++)
-		for (int y = 0; y < h; y++)
-			tiles[(y * w) + x] = calculateSpinValueForPixel(x, y, w, h);
 	// numspins = the number of steps it takes to spin the largest fully connected circle 360 degrees
-	calculateTileSettings(w, h, &numspins, &numDistinctTiles, wUneven, hUneven);
-	if (*previousSpins == numspins)
-		*previousSpins = 0;
-	spinTileSet
-	if (previousSpins == 0 && wUneven)
-	if (previousSpins == numspins - 1 && hUneven)*/
+	if (*previousSpins + turns >= (unsigned)numspins)
+    {
+        turns -= numspins - *previousSpins;
+        *previousSpins = turns;
+    }
+    else
+        *previousSpins += turns;
+	//spinTileSet
+	for (unsigned int i = 0; i < tileSets.size(); i++)
+    {
 
+    }
 }

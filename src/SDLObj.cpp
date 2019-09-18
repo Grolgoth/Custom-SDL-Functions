@@ -1,4 +1,4 @@
-#include "SDL.h"
+#include "SDLObj.h"
 #include <sdl_ttf_custom.h>
 
 SDL::SDL(int winW, int winH, Uint32 initFlags) : target(nullptr)
