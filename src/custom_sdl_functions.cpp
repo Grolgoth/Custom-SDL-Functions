@@ -269,55 +269,42 @@ int calculateSpins(int tileSetSize, int largestSetSize, int spins)
     return result;
 }
 
-void spinTileSet(SDL_Surface* target, SDL_Rect* clip, std::vector<int> tileSet, bool right, int spins)
+void spinTileSet(SDL_Surface* target, std::vector<int> tileSet, bool right, int spins)
 {
-    int yInTarget(0), xInTarget(0);
-    if (clip != nullptr)
-	{
-		xInTarget = clip->x;
-		yInTarget = clip->y;
-	}
+    if (spins == 0)
+        return;
     Uint32 *pixels = (Uint32*)target->pixels;
-    if (clip != nullptr)
+    Uint32 *pixelsNew = new Uint32[target->h * target->w];
+    for (int i = 0; i < target->h * target->w; i++)
+        pixelsNew[i] = pixels[i];
+    for (int i = 0; i < spins; i++)
     {
-        for (unsigned int i = 0; i < tileSet.size(); i++)
+        int newPosition = 0;
+        int shifts = 0;
+        Uint32 old = pixelsNew[tileSet[0]];
+        while ((unsigned)shifts < tileSet.size())
         {
-            int location = tileSet[i];
-            int mody = 0;
-            if (clip->w != 0)
+            Uint32 next = old;
+            if (right)
             {
-                while(location > clip->w - 1)
-                {
-                    location -= clip->w;
-                    mody += target->w;
-                }
+                newPosition ++;
+                if ((unsigned)newPosition >= tileSet.size())
+                    newPosition -= tileSet.size();
             }
-            tileSet[i] = yInTarget * target->w + xInTarget + mody + location;
+            else
+            {
+                newPosition --;
+                if (newPosition < 0)
+                    newPosition += tileSet.size();
+            }
+            old = pixelsNew[tileSet[newPosition]];
+            pixelsNew[tileSet[newPosition]] = next;
+            shifts ++;
         }
     }
-    Uint32 next = 0;
-    Uint32 old = pixels[tileSet[0]];
-    int newPosition = 0;
-    int shifts = 0;
-    while ((unsigned)shifts < tileSet.size())
-    {
-        next = old;
-        if (right)
-        {
-            newPosition += spins;
-            while ((unsigned)newPosition >= tileSet.size())
-                newPosition -= tileSet.size();
-        }
-        else
-        {
-            newPosition -= spins;
-            while (newPosition < 0)
-                newPosition += tileSet.size();
-        }
-        old = pixels[tileSet[newPosition]];
-        pixels[tileSet[newPosition]] = next;
-        shifts ++;
-    }
+    for (int i = 0; i < target->h * target->w; i++)
+        pixels[i] = pixelsNew[i];
+    delete[] pixelsNew;
 }
 
 //DEFINED FUNCTIONS
@@ -629,14 +616,18 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 	SDL_UnlockSurface(target);
 }
 
-void spin_surface_safe(SDL_Surface* target, int* previousSpins, unsigned int turns, int numspins, std::vector<std::vector<int>> tileSets, bool right, SDL_Rect* clip)
+void spin_surface_safe(SDL_Surface* target, SDL_Surface* glyph, int* previousSpins, unsigned int turns, int numspins, std::vector<std::vector<int>> tileSets, bool right, SDL_Rect* clip)
 {
-    if (target->pitch > 150)
-		throw "Error: Due to sdl_functionality such as pixel pitch which creates skewed representations of rows and columns in a surface's pixel array this function should not be used for large images.";
+    int xInTarget(0), yInTarget(0);
 	if (SDL_MUSTLOCK(target))
 		SDL_LockSurface(target);
 	if (dimensionCheck(target->w, target->h, (Uint32*)target->pixels, clip, target))
 		return;
+    if (clip != nullptr)
+	{
+		xInTarget = clip->x;
+		yInTarget = clip->y;
+	}
 	if (*previousSpins + turns >= (unsigned)numspins)
     {
         turns -= numspins - *previousSpins;
@@ -645,10 +636,13 @@ void spin_surface_safe(SDL_Surface* target, int* previousSpins, unsigned int tur
     else
         *previousSpins += turns;
 	//spinTileSets
+	SDL_Surface* spun = copy_surface(glyph, nullptr);
 	for (unsigned int i = 0; i < tileSets.size(); i++)
     {
         int spins = calculateSpins(tileSets[i].size(), numspins, *previousSpins);
-        spinTileSet(target, clip, tileSets[i], right, spins);
+        spinTileSet(spun, tileSets[i], right, spins);
     }
+    apply_surface(xInTarget, yInTarget, spun, target, nullptr);
+    SDL_FreeSurface(spun);
     SDL_UnlockSurface(target);
 }

@@ -44,6 +44,6 @@ void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip = nu
     rather according to how big it is. Large images will require many spins to see effect take place, smaller ones will need less.
     You'll also have to specify how many times it's been spun before. (Because smaller sets only spin at certain times)
 */
-void spin_surface_safe(SDL_Surface* target, int* previousSpins, unsigned int turns, int numpspins, std::vector<std::vector<int>> tileSets, bool right = false, SDL_Rect* clip = nullptr);
+void spin_surface_safe(SDL_Surface* target, SDL_Surface* glyph, int* previousSpins, unsigned int turns, int numpspins, std::vector<std::vector<int>> tileSets, bool right = false, SDL_Rect* clip = nullptr);
 
 #endif // CUSTOM_SDL_FUNCTIONS_H
