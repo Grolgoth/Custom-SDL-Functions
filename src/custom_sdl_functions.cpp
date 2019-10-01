@@ -364,6 +364,8 @@ std::vector<std::vector<int>> getTileSetsOfSurface(int w, int h, int* numSpins)
     std::vector<std::vector<int>> result;
     short hor = w;
     short v = h;
+    if (v == 0 || w == 0)
+    	return result;
     for (int i = 0; i <= ceil(hor / 2.0); i++)
     {
         std::vector<int> lefts;
