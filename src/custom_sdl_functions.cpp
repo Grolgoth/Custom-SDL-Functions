@@ -523,12 +523,12 @@ void shift_pixels_horizontal(SDL_Surface* target, bool right, SDL_Rect* clip)
 	Uint32 transparent = 0;
 	if (right)
 	{
-		for(int x = startx; x < endx - 1; x++)
+		for(int x = endx - 2; x >= startx; x--)
 		{
-			for(int y = starty; y < endy; y++)
+			for(int y = starty; y < endy; y ++)
 			{
 				Uint32 pixel = get_pixel32(target, x, y);
-				put_pixel32(target, x, x+1, pixel);
+				put_pixel32(target, x + 1, y, pixel);
 			}
 		}
 		for(int y = starty; y < endy; y++)
@@ -538,9 +538,9 @@ void shift_pixels_horizontal(SDL_Surface* target, bool right, SDL_Rect* clip)
 	}
 	else
 	{
-		for(int x = endx - 1; x >= startx; x--)
+		for(int x = startx + 1; x < endx; x++)
 		{
-			for(int y = starty; y < endy; y ++)
+			for(int y = starty; y < endy; y++)
 			{
 				Uint32 pixel = get_pixel32(target, x, y);
 				put_pixel32(target, x - 1, y, pixel);
@@ -548,7 +548,7 @@ void shift_pixels_horizontal(SDL_Surface* target, bool right, SDL_Rect* clip)
 		}
 		for(int y = starty; y < endy; y++)
 		{
-			put_pixel32(target, endx - 1, starty, transparent);
+			put_pixel32(target, endx - 1, y, transparent);
 		}
 	}
 	SDL_UnlockSurface(target);
