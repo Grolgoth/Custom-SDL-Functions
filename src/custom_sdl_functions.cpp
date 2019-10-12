@@ -1,5 +1,6 @@
 #include "custom_sdl_functions.h"
 #include <cmath>
+#include <fstream>
 
 //NON DEFINED FUCTIONS
 
@@ -21,6 +22,26 @@ void put_pixel32( SDL_Surface *surface, int x, int y, Uint32 pixel )
 {
     Uint32 *pixels = (Uint32*)surface->pixels;
     pixels[(y * surface->w)+x] = pixel;
+}
+
+void checkSurface(SDL_Surface* target, bool colorKey)
+{
+	if(target != nullptr)
+	{
+		if (colorKey)
+		{
+			Uint32 colorkey = SDL_MapRGB( target->format, 0, 0xFF, 0xFF );
+			SDL_SetColorKey( target, SDL_TRUE, colorkey );
+		}
+	}
+    else
+	{
+		std::string error = "Error loading image with SDL: ";
+		const char* sdlError = SDL_GetError();
+		for (unsigned int i = 0; i < SDL_strlen(sdlError); i ++)
+			error += SDL_GetError()[i];
+		throw error;
+	}
 }
 
 template<class T>
@@ -312,23 +333,22 @@ void spinTileSet(SDL_Surface* target, std::vector<int> tileSet, bool right, int 
 SDL_Surface* load_image(std::string filename, bool colorKey)
 {
     SDL_Surface* loadedImage = SDL_LoadBMP(filename.c_str());
-    if(loadedImage != nullptr)
-	{
-		if (colorKey)
-		{
-			Uint32 colorkey = SDL_MapRGB( loadedImage->format, 0, 0xFF, 0xFF );
-			SDL_SetColorKey( loadedImage, SDL_TRUE, colorkey );
-		}
-	}
-    else
-	{
-		std::string error = "Error loading image with SDL: ";
-		const char* sdlError = SDL_GetError();
-		for (unsigned int i = 0; i < SDL_strlen(sdlError); i ++)
-			error += SDL_GetError()[i];
-		throw error;
-	}
+    checkSurface(loadedImage, colorKey);
     return loadedImage;
+}
+
+SDL_Surface* BMPFromFile(std::string filename, unsigned int from, unsigned int size, bool colorkey)
+{
+	std::ifstream file(filename, std::ios::binary);
+    char *buffer = (char *)malloc(size);
+    file.seekg(from);
+    file.read(buffer, size);
+    file.close();
+    SDL_RWops *pixelsWop = SDL_RWFromMem(buffer, size);
+	SDL_Surface *test = SDL_LoadBMP_RW(pixelsWop, 1);
+    free(buffer);
+    checkSurface(test, colorkey);
+    return test;
 }
 
 SDL_Surface* createTransparentSurface(unsigned int w, unsigned int h)

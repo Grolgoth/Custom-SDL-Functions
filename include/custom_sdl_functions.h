@@ -8,6 +8,13 @@
 	Loads the image to an SDL_Surface* and makes al pixels of color (0, 255, 255) transparent if colorKey == true
 */
 SDL_Surface* load_image(std::string filename, bool colorKey = true);
+/**
+	Extracts a byte array from a large file and if this array is a valid bmp file it will create an SDL_Surface* from it.
+	It will make all pixels of color (0, 255, 255) transparent if colorKey == true.
+	Size should be the size of the desired bitmap. NOTE that "from" should be equal to the position in the file (bytearray)
+	where the bitmap begins. So if the file started at the nth byte of the file from should be n - 1.
+*/
+SDL_Surface* BMPFromFile(std::string file, unsigned int from, unsigned int until, bool colorkey = true);
 SDL_Surface* createTransparentSurface(unsigned int w, unsigned int h);
 SDL_Surface* copy_surface(SDL_Surface* target, SDL_Rect* clip);
 SDL_Color createColor(int r, int g, int b, int a);
