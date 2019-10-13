@@ -16,7 +16,7 @@ SDL_Surface* load_image(std::string filename, bool colorKey = true);
 */
 SDL_Surface* BMPFromFile(std::string file, unsigned int from, unsigned int until, bool colorkey = true);
 SDL_Surface* createTransparentSurface(unsigned int w, unsigned int h);
-SDL_Surface* copy_surface(SDL_Surface* target, SDL_Rect* clip);
+SDL_Surface* copy_surface(SDL_Surface* target, SDL_Rect* clip = nullptr);
 SDL_Color createColor(int r, int g, int b, int a);
 /**
     Returns a vector of sets of coordinates in a pixelmap with an equal distance from the nearest corner.
