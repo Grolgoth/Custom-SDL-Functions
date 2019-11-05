@@ -1,5 +1,6 @@
 #include "SDLObj.h"
 #include <sdl_ttf_custom.h>
+#include <SDL_mixer.h>
 
 SDL::SDL(int winW, int winH, Uint32 initFlags) : target(nullptr)
 {
@@ -9,6 +10,7 @@ SDL::SDL(int winW, int winH, Uint32 initFlags) : target(nullptr)
 		std::cout << "Error initializing SDL: " << SDL_GetError() << std::endl;
 	else
 		healthy = true;
+	withMixer = initFlags && SDL_INIT_AUDIO;
 }
 
 SDL::~SDL()
@@ -17,6 +19,8 @@ SDL::~SDL()
 		SDL_FreeSurface(target);
 	SDL_DestroyWindow( m_window );
     SDL_DestroyRenderer( m_renderer );
+    if (withMixer)
+		Mix_Quit();
     TTF_Quit();
     SDL_Quit();
 }
@@ -42,5 +46,8 @@ bool SDL::init(Uint32 flags)
 		return false;
 	if (m_window == nullptr || m_renderer == nullptr)
 		return false;
+	if (flags && SDL_INIT_AUDIO)
+		if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+			return false;
 	return true;
 }

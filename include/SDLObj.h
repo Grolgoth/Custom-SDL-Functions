@@ -16,6 +16,7 @@ class SDL
 		SDL(SDL& other);
 		bool init(Uint32 flags);
 		bool healthy = false;
+		bool withMixer = false;
 		int WINW;
 		int WINH;
 		SDL_Window* m_window;
