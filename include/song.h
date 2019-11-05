@@ -9,7 +9,7 @@ class Song
 {
 
 	public:
-		Song(std::string title, std::string path, int song = -1, int size = -1);
+		Song(std::string title, std::string path, int from = -1, int size = -1);
 		Song(Mix_Music* songInitialized);
 		~Song();
 		void play(int loops = 0);

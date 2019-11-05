@@ -46,7 +46,7 @@ bool SDL::init(Uint32 flags)
 		return false;
 	if (m_window == nullptr || m_renderer == nullptr)
 		return false;
-	if (flags && SDL_INIT_AUDIO)
+	if (flags | SDL_INIT_AUDIO)
 		if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
 			return false;
 	return true;

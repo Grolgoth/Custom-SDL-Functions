@@ -348,6 +348,36 @@ SDL_Surface* BMPFromFile(std::string filename, unsigned int from, unsigned int s
 	SDL_Surface *test = SDL_LoadBMP_RW(pixelsWop, 1);
     free(buffer);
     checkSurface(test, colorkey);
+	if (test == nullptr)
+		throw "Error loading music! byte position parameters are probably incorrect.";
+    return test;
+}
+
+Mix_Chunk* soundFromFile(std::string filename, unsigned int from, unsigned int size)
+{
+	std::ifstream file(filename, std::ios::binary);
+    char *buffer = (char *)malloc(size);
+    file.seekg(from);
+    file.read(buffer, size);
+    file.close();
+    SDL_RWops *soundWop = SDL_RWFromMem(buffer, size);
+	Mix_Chunk *test = Mix_LoadWAV_RW(soundWop, 1);
+    free(buffer);
+    if (test == nullptr)
+		throw "Error loading sound! byte position parameters are probably incorrect.";
+    return test;
+}
+
+Mix_Music* musicFromFile(std::string filename, unsigned int from, unsigned int size)
+{
+	std::ifstream file(filename, std::ios::binary);
+    char *buffer = (char *)malloc(size);
+    file.seekg(from);
+    file.read(buffer, size);
+    file.close();
+    SDL_RWops *musicWop = SDL_RWFromMem(buffer, size);
+	Mix_Music *test = Mix_LoadMUS_RW(musicWop, 1);
+    free(buffer);
     return test;
 }
 

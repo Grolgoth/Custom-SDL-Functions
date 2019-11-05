@@ -20,7 +20,7 @@ Song::Song(std::string title, std::string path, int from, int size) : name(title
 	else
 		music = Mix_LoadMUS(path.c_str());
 	if (music == nullptr)
-		throw "Error loading song: " + title;
+		throw "Error loading song: " + title + " file: " + path;
 	timer = Timer::getTimer();
 }
 

@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <iostream>
 #include <vector>
+#include <SDL_mixer.h>
 
 /**
 	Loads the image to an SDL_Surface* and makes al pixels of color (0, 255, 255) transparent if colorKey == true
@@ -18,6 +19,8 @@ SDL_Surface* BMPFromFile(std::string file, unsigned int from, unsigned int until
 SDL_Surface* createTransparentSurface(unsigned int w, unsigned int h);
 SDL_Surface* copy_surface(SDL_Surface* target, SDL_Rect* clip = nullptr);
 SDL_Color createColor(int r, int g, int b, int a);
+Mix_Chunk* soundFromFile(std::string filename, unsigned int from, unsigned int size);
+Mix_Music* musicFromFile(std::string filename, unsigned int from, unsigned int size);
 /**
     Returns a vector of sets of coordinates in a pixelmap with an equal distance from the nearest corner.
 */
