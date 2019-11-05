@@ -12,7 +12,7 @@ class Song
 		Song(std::string title, std::string path, int song = -1, int size = -1);
 		Song(Mix_Music* songInitialized);
 		~Song();
-		void play();
+		void play(int loops = 0);
 		inline bool isPlaying() {return Mix_PlayingMusic();}
 		int getPlayTime();
 		void pause();

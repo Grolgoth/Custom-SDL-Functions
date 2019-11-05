@@ -34,14 +34,16 @@ Song::Song(Mix_Music* songInitialized)
 
 Song::~Song()
 {
+	if (songBeingPlayed == name)
+		Mix_HaltMusic();
 	Mix_FreeMusic(music);
 	delete timer;
 }
 
-void Song::play()
+void Song::play(int loops)
 {
 	songBeingPlayed = name;
-	Mix_PlayMusic(music, 0);
+	Mix_PlayMusic(music, loops);
 	timer->start();
 }
 
