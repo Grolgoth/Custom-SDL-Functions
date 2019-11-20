@@ -15,8 +15,8 @@ SDL::SDL(int winW, int winH, Uint32 initFlags)
 
 SDL::~SDL()
 {
-	SDL_DestroyWindow( m_window );
-    SDL_DestroyRenderer( m_renderer );
+	SDL_DestroyWindow(m_window);
+    SDL_DestroyRenderer(m_renderer);
     if (withMixer)
 		Mix_Quit();
     TTF_Quit();
@@ -34,7 +34,11 @@ bool SDL::init(Uint32 flags)
 		return false;
 	if(TTF_Init())
 		return false;
-	if(SDL_CreateWindowAndRenderer( WINW, WINH, SDL_WINDOW_SHOWN, &m_window, &m_renderer)) //possibly use settings for fullscreen, resizable window etc
+	m_window = SDL_CreateWindow("Fools' Crypt", 100, 100, WINW, WINH, SDL_WINDOW_SHOWN); //possibly use settings for fullscreen, resizable window etc
+	if (m_window == nullptr)
+		return false;
+	m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_SOFTWARE);
+	if (m_renderer == nullptr)
 		return false;
 	if (m_window == nullptr || m_renderer == nullptr)
 		return false;
