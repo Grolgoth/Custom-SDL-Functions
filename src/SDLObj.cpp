@@ -2,7 +2,7 @@
 #include <sdl_ttf_custom.h>
 #include <SDL_mixer.h>
 
-SDL::SDL(int winW, int winH, Uint32 initFlags) : target(nullptr)
+SDL::SDL(int winW, int winH, Uint32 initFlags)
 {
 	WINW = winW;
 	WINH = winH;
@@ -15,8 +15,6 @@ SDL::SDL(int winW, int winH, Uint32 initFlags) : target(nullptr)
 
 SDL::~SDL()
 {
-	if (target != nullptr)
-		SDL_FreeSurface(target);
 	SDL_DestroyWindow( m_window );
     SDL_DestroyRenderer( m_renderer );
     if (withMixer)
@@ -27,13 +25,7 @@ SDL::~SDL()
 
 void SDL::render()
 {
-	SDL_RenderClear(m_renderer);
-    SDL_Texture* screen = SDL_CreateTextureFromSurface(m_renderer, target);
-    SDL_RenderCopy(m_renderer, screen, NULL, NULL);
     SDL_RenderPresent(m_renderer);
-    SDL_DestroyTexture(screen);
-    SDL_FreeSurface(target);
-	target = SDL_CreateRGBSurface(SDL_SWSURFACE,WINW,WINH,32,0xff000000,0x00ff0000,0x0000ff00,0x000000ff);
 }
 
 bool SDL::init(Uint32 flags)
@@ -50,4 +42,34 @@ bool SDL::init(Uint32 flags)
 		if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
 			return false;
 	return true;
+}
+
+void SDL::addToTarget(SDL_Texture* texture, int x, int y, int w, int h, SDL_Rect* clip)
+{
+	SDL_Rect clipobj;
+	SDL_Rect* clipdest = nullptr;
+	if (x != 0 || y != 0)
+	{
+		clipobj.x = x;
+		clipobj.y = y;
+		clipobj.w = w;
+		clipobj.h = h;
+		clipdest = &clipobj;
+	}
+	SDL_RenderCopy(m_renderer, texture, clip, clipdest);
+}
+
+void SDL::textToTarget(SDL_Surface* text, int x, int y)
+{
+	SDL_Texture* converted = SDL_CreateTextureFromSurface(m_renderer, text);
+	SDL_Rect clip;
+	clip.x = x;
+	clip.y = y;
+	SDL_QueryTexture(converted, nullptr, nullptr, &clip.w, &clip.h);
+	if (clip.x + clip.w >= WINW)
+		clip.w = WINW - clip.x;
+	if (clip.y + clip.h >= WINH)
+		clip.h = WINH - clip.y;
+	SDL_RenderCopy(m_renderer, converted, nullptr, &clip);
+	SDL_DestroyTexture(converted);
 }

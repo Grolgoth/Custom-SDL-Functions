@@ -8,9 +8,10 @@ class SDL
 		SDL(int winW, int winH, Uint32 initFlags = 0);
 		~SDL();
 		void render();
-		inline void addSurfaceToTarget(int x, int y, SDL_Surface* source, SDL_Rect* clip = nullptr) {apply_surface(x, y, source, target, clip);}
-		inline SDL_Surface* getTarget() {return target;}
 		inline bool isHealthy() {return healthy;}
+		void addToTarget(SDL_Texture* texture, int x, int y, int w, int h, SDL_Rect* clip = nullptr);
+		void textToTarget(SDL_Surface* text, int x, int y);
+		inline SDL_Renderer* getRenderer() {return m_renderer;}
 
 	private:
 		SDL(SDL& other);
@@ -21,7 +22,6 @@ class SDL
 		int WINH;
 		SDL_Window* m_window;
 		SDL_Renderer* m_renderer;
-		SDL_Surface* target;
 };
 
 #endif // SDLObj_H
