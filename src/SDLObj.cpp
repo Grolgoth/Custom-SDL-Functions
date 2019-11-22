@@ -77,3 +77,17 @@ void SDL::textToTarget(SDL_Surface* text, int x, int y)
 	SDL_RenderCopy(m_renderer, converted, nullptr, &clip);
 	SDL_DestroyTexture(converted);
 }
+
+void SDL::fullscreen()
+{
+	isFullscreen = !isFullscreen;
+	if (isFullscreen)
+		SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
+	else
+		SDL_SetWindowFullscreen(m_window, 0);
+}
+
+void SDL::changeWindowSize(int winw, int winh)
+{
+	SDL_SetWindowSize(m_window, winw, winh);
+}

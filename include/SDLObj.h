@@ -12,12 +12,15 @@ class SDL
 		void addToTarget(SDL_Texture* texture, int x, int y, int w, int h, SDL_Rect* clip = nullptr);
 		void textToTarget(SDL_Surface* text, int x, int y);
 		inline SDL_Renderer* getRenderer() {return m_renderer;}
+		void changeWindowSize(int winw, int winh);
+		void fullscreen();
 
 	private:
 		SDL(SDL& other);
 		bool init(Uint32 flags);
 		bool healthy = false;
 		bool withMixer = false;
+		bool isFullscreen = false;
 		int WINW;
 		int WINH;
 		SDL_Window* m_window;
