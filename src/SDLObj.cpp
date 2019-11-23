@@ -38,6 +38,7 @@ bool SDL::init(Uint32 flags)
 	if (m_window == nullptr)
 		return false;
 	m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_SOFTWARE);
+	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
 	if (m_renderer == nullptr)
 		return false;
 	if (m_window == nullptr || m_renderer == nullptr)
@@ -54,10 +55,10 @@ void SDL::addToTarget(SDL_Texture* texture, int x, int y, int w, int h, SDL_Rect
 	SDL_Rect* clipdest = nullptr;
 	if (x != 0 || y != 0)
 	{
-		clipobj.x = x;
-		clipobj.y = y;
-		clipobj.w = w;
-		clipobj.h = h;
+		clipobj.x = x * sizeChangeFactorW;
+		clipobj.y = y * sizeChangeFactorH;
+		clipobj.w = w * sizeChangeFactorW;
+		clipobj.h = h * sizeChangeFactorH;
 		clipdest = &clipobj;
 	}
 	SDL_RenderCopy(m_renderer, texture, clip, clipdest);
@@ -67,13 +68,15 @@ void SDL::textToTarget(SDL_Surface* text, int x, int y)
 {
 	SDL_Texture* converted = SDL_CreateTextureFromSurface(m_renderer, text);
 	SDL_Rect clip;
-	clip.x = x;
-	clip.y = y;
+	clip.x = x * sizeChangeFactorW;
+	clip.y = y * sizeChangeFactorH;
 	SDL_QueryTexture(converted, nullptr, nullptr, &clip.w, &clip.h);
+	clip.w *= sizeChangeFactorW;
+	clip.h *= sizeChangeFactorH;
 	if (clip.x + clip.w >= WINW)
-		clip.w = WINW - clip.x;
+		clip.w = WINW * sizeChangeFactorW - clip.x;
 	if (clip.y + clip.h >= WINH)
-		clip.h = WINH - clip.y;
+		clip.h = WINH * sizeChangeFactorH - clip.y;
 	SDL_RenderCopy(m_renderer, converted, nullptr, &clip);
 	SDL_DestroyTexture(converted);
 }
@@ -90,4 +93,24 @@ void SDL::fullscreen()
 void SDL::changeWindowSize(int winw, int winh)
 {
 	SDL_SetWindowSize(m_window, winw, winh);
+	sizeChangeFactorW = double(winw) / double(WINW);
+	sizeChangeFactorH = double(winh) / double(WINH);
+}
+
+void SDL::modColors(int a, int r, int g, int b, SDL_Rect* clip)
+{
+	SDL_Rect screenrect;
+	screenrect.x = 0; screenrect.y = 0; screenrect.w = WINW; screenrect.h = WINH;
+	SDL_SetRenderDrawColor(m_renderer, r, g, b, a);
+	if (clip != nullptr)
+		SDL_RenderFillRect(m_renderer, clip);
+	else
+		SDL_RenderFillRect(m_renderer, &screenrect);
+}
+
+void SDL::rect(int x, int y, int w, int h, SDL_Color color)
+{
+	SDL_Rect screenRect = {x, y, w, h};
+	SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+	SDL_RenderDrawRect(m_renderer, &screenRect);
 }

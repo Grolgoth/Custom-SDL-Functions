@@ -14,6 +14,8 @@ class SDL
 		inline SDL_Renderer* getRenderer() {return m_renderer;}
 		void changeWindowSize(int winw, int winh);
 		void fullscreen();
+		void modColors(int a, int r, int g, int b, SDL_Rect* clip = nullptr);
+		void rect(int x, int y, int w, int h, SDL_Color color);
 
 	private:
 		SDL(SDL& other);
@@ -21,6 +23,8 @@ class SDL
 		bool healthy = false;
 		bool withMixer = false;
 		bool isFullscreen = false;
+		double sizeChangeFactorW = 1.0;
+		double sizeChangeFactorH = 1.0;
 		int WINW;
 		int WINH;
 		SDL_Window* m_window;
