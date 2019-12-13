@@ -16,6 +16,8 @@ class SDL
 		void fullscreen();
 		void modColors(int a, int r, int g, int b, SDL_Rect* clip = nullptr);
 		void rect(int x, int y, int w, int h, SDL_Color color);
+		inline int getWinW() {return WINW;}
+		inline int getWinH() {return WINH;}
 
 	private:
 		SDL(SDL& other);
