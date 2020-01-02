@@ -399,6 +399,32 @@ SDL_Surface* copy_surface(SDL_Surface* target, SDL_Rect* clip)
 	return result;
 }
 
+SDL_Texture* modTexture(SDL_Renderer* renderer, SDL_Texture* source, int flip, SDL_Rect* clip, double angle, SDL_Point* point)
+{
+	int w, h = 0;
+	Uint32 format;
+	SDL_QueryTexture(source, &format, nullptr, &w, &h);
+	if (clip != nullptr)
+	{
+		w = clip->w;
+		h = clip->h;
+	}
+	SDL_Texture* result = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
+	SDL_SetRenderTarget(renderer, result);
+
+	if (flip == 1)
+		SDL_RenderCopyEx(renderer, source, clip, nullptr, angle, point, SDL_FLIP_HORIZONTAL);
+	else if (flip == 2)
+		SDL_RenderCopyEx(renderer, source, clip, nullptr, angle, point, SDL_FLIP_VERTICAL);
+	else if (flip == 3)
+		SDL_RenderCopyEx(renderer, source, clip, nullptr, 180.0, point, SDL_FLIP_NONE);
+	else
+		SDL_RenderCopyEx(renderer, source, clip, nullptr, angle, point, SDL_FLIP_NONE);
+
+	SDL_SetRenderTarget(renderer, nullptr);
+	return result;
+}
+
 SDL_Color createColor(int r, int g, int b, int a)
 {
     SDL_Color C;
