@@ -53,7 +53,7 @@ void SDL::addToTarget(SDL_Texture* texture, int x, int y, int w, int h, SDL_Rect
 {
 	SDL_Rect clipobj;
 	SDL_Rect* clipdest = nullptr;
-	if (x != 0 || y != 0)
+	if (w != 0 || h != 0)
 	{
 		clipobj.x = x * sizeChangeFactorW;
 		clipobj.y = y * sizeChangeFactorH;

@@ -410,6 +410,7 @@ SDL_Texture* modTexture(SDL_Renderer* renderer, SDL_Texture* source, int flip, S
 		h = clip->h;
 	}
 	SDL_Texture* result = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
+	SDL_SetTextureBlendMode(result, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderTarget(renderer, result);
 
 	if (flip == 1)
