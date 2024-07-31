@@ -2,7 +2,7 @@
 #include <sdl_ttf_custom.h>
 #include <SDL_mixer.h>
 
-SDL::SDL(int winW, int winH, Uint32 initFlags)
+SDL::SDL(int winW, int winH, Uint32 initFlags, bool resizeable, std::string winName) : resizeable(resizeable), winName(winName)
 {
 	WINW = winW;
 	WINH = winH;
@@ -10,7 +10,8 @@ SDL::SDL(int winW, int winH, Uint32 initFlags)
 		std::cout << "Error initializing SDL: " << SDL_GetError() << std::endl;
 	else
 		healthy = true;
-	withMixer = initFlags && SDL_INIT_AUDIO;
+	withMixer = initFlags & SDL_INIT_AUDIO;
+	discoverPixelFormats();
 }
 
 SDL::~SDL()
@@ -31,13 +32,16 @@ void SDL::render()
 bool SDL::init(Uint32 flags)
 {
 	if(SDL_Init(flags))
+	{
+		std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
 		return false;
+	}
 	if(TTF_Init())
 		return false;
-	m_window = SDL_CreateWindow("Fools' Crypt", 100, 100, WINW, WINH, SDL_WINDOW_SHOWN); //possibly use settings for fullscreen, resizable window etc
+	createWindow();
 	if (m_window == nullptr)
 		return false;
-	m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_SOFTWARE);
+	m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
 	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
 	if (m_renderer == nullptr)
 		return false;
@@ -47,6 +51,38 @@ bool SDL::init(Uint32 flags)
 		if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
 			return false;
 	return true;
+}
+
+void SDL::discoverPixelFormats()
+{
+	SDL_RendererInfo info;
+	SDL_GetRendererInfo(m_renderer, &info);
+	for (unsigned int i = 0; i < info.num_texture_formats; ++i)
+		if (!SDL_ISPIXELFORMAT_FOURCC(info.texture_formats[i]) && SDL_ISPIXELFORMAT_ALPHA(info.texture_formats[i]))
+			bestFormatForAlphaBMPs = info.texture_formats[i];
+}
+
+void SDL::createWindow()
+{
+	if (WINW == 0 || WINH == 0)
+	{
+		SDL_DisplayMode displayMode;
+		if (SDL_GetCurrentDisplayMode(0, &displayMode))
+		{
+			std::cout << "SDL_GetCurrentDisplayMode Error: " << SDL_GetError() << std::endl;
+			WINW = 400;
+			WINH = 400;
+		}
+		else
+		{
+			WINW = displayMode.w - 100;
+			WINH = displayMode.h - 100;
+		}
+	}
+	Uint32 windowFlags = SDL_WINDOW_SHOWN;
+	if (resizeable)
+		windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED;
+	m_window = SDL_CreateWindow(winName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINW, WINH, windowFlags); //possibly use settings for fullscreen, resizable window etc
 }
 
 void SDL::addToTarget(SDL_Texture* texture, int x, int y, int w, int h, SDL_Rect* clip)
@@ -108,9 +144,17 @@ void SDL::modColors(int a, int r, int g, int b, SDL_Rect* clip)
 		SDL_RenderFillRect(m_renderer, &screenrect);
 }
 
-void SDL::rect(int x, int y, int w, int h, SDL_Color color)
+void SDL::rect(int x, int y, int w, int h, SDL_Color color, bool draw)
 {
+	if (w == 0 || h == 0)
+	{
+		w = WINW;
+		h = WINH;
+	}
 	SDL_Rect screenRect = {x, y, w, h};
 	SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
-	SDL_RenderDrawRect(m_renderer, &screenRect);
+	if (draw)
+		SDL_RenderDrawRect(m_renderer, &screenRect);
+	else
+		SDL_RenderFillRect(m_renderer, &screenRect);
 }
