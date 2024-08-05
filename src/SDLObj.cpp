@@ -75,7 +75,7 @@ void SDL::createWindow()
 		}
 		else
 		{
-			WINW = displayMode.w - 100;
+			WINW = displayMode.w - 50;
 			WINH = displayMode.h - 100;
 		}
 	}
@@ -157,4 +157,5 @@ void SDL::rect(int x, int y, int w, int h, SDL_Color color, bool draw)
 		SDL_RenderDrawRect(m_renderer, &screenRect);
 	else
 		SDL_RenderFillRect(m_renderer, &screenRect);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 }
