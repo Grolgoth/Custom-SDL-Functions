@@ -399,6 +399,33 @@ SDL_Surface* copy_surface(SDL_Surface* target, SDL_Rect* clip)
 	return result;
 }
 
+SDL_Texture* duplicateTexture(SDL_Texture* source, SDL_Renderer* renderer, SDL_Rect* clip, bool center)
+{
+	Uint32 format;
+    int access, width, height;
+    SDL_QueryTexture(source, &format, &access, &width, &height);
+
+    if (clip != nullptr)
+	{
+		if (center)
+		{
+			clip->x = (width - clip->w) / 2;
+			clip->y = (height - clip->h) / 2;
+		}
+		width = clip->w;
+		height = clip->h;
+	}
+
+    SDL_Texture* duplicate = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, width, height);
+    if (!duplicate)
+        throw SDL_GetError();
+
+	SDL_SetRenderTarget(renderer, duplicate);
+	SDL_RenderCopy(renderer, source, clip, nullptr);
+	SDL_SetRenderTarget(renderer, nullptr);
+	return duplicate;
+}
+
 SDL_Texture* modTexture(SDL_Renderer* renderer, SDL_Texture* source, int flip, SDL_Rect* clip, double angle, SDL_Point* point)
 {
 	int w, h = 0;
