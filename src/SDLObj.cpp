@@ -64,19 +64,26 @@ void SDL::discoverPixelFormats()
 
 void SDL::createWindow()
 {
-	if (WINW == 0 || WINH == 0)
+	SDL_DisplayMode displayMode;
+	if (SDL_GetCurrentDisplayMode(0, &displayMode))
 	{
-		SDL_DisplayMode displayMode;
-		if (SDL_GetCurrentDisplayMode(0, &displayMode))
-		{
-			std::cout << "SDL_GetCurrentDisplayMode Error: " << SDL_GetError() << std::endl;
-			WINW = 400;
-			WINH = 400;
-		}
-		else
+		std::cout << "SDL_GetCurrentDisplayMode Error: " << SDL_GetError() << std::endl;
+		WINW = 800;
+		WINH = 600;
+	}
+	else
+	{
+		if (WINW == 0 || WINH == 0)
 		{
 			WINW = displayMode.w - 50;
 			WINH = displayMode.h - 100;
+		}
+		else
+		{
+			if (WINW > displayMode.w)
+				WINW = displayMode.w;
+			if (WINH > displayMode.h)
+				WINH = displayMode.h;
 		}
 	}
 	Uint32 windowFlags = SDL_WINDOW_SHOWN;
