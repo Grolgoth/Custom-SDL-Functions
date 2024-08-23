@@ -16,6 +16,7 @@ class SDL
 		void fullscreen();
 		void modColors(int a, int r, int g, int b, SDL_Rect* clip = nullptr);
 		void rect(int x, int y, int w, int h, SDL_Color color, bool draw = false);
+		void rectRounded(SDL_Rect rect, int cornerRadius, SDL_Color color, bool draw);
 		inline int getWinW() {return WINW;}
 		inline int getWinH() {return WINH;}
 		inline Uint32 getBestFormatForAlphaBMPs() {return bestFormatForAlphaBMPs;}

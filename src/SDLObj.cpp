@@ -166,3 +166,87 @@ void SDL::rect(int x, int y, int w, int h, SDL_Color color, bool draw)
 		SDL_RenderFillRect(m_renderer, &screenRect);
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 }
+
+// Helper function to draw a filled circle
+void drawFilledCircle(SDL_Renderer* renderer, int x, int y, int radius, bool fill)
+{
+	if (!fill)
+	{
+		int x_offset = 0;
+		int y_offset = radius;
+		int decision_over2 = 1 - y_offset;   // Decision criterion divided by 2
+
+		while (y_offset >= x_offset)
+		{
+			// Draw the perimeter points
+			SDL_RenderDrawPoint(renderer, x + x_offset, y + y_offset);
+			SDL_RenderDrawPoint(renderer, x + y_offset, y + x_offset);
+			SDL_RenderDrawPoint(renderer, x - x_offset, y + y_offset);
+			SDL_RenderDrawPoint(renderer, x - y_offset, y + x_offset);
+			SDL_RenderDrawPoint(renderer, x + x_offset, y - y_offset);
+			SDL_RenderDrawPoint(renderer, x + y_offset, y - x_offset);
+			SDL_RenderDrawPoint(renderer, x - x_offset, y - y_offset);
+			SDL_RenderDrawPoint(renderer, x - y_offset, y - x_offset);
+
+			x_offset++;
+
+			if (decision_over2 <= 0)
+			{
+				decision_over2 += 2 * x_offset + 1;   // Change in decision criterion for x_offset -> x_offset+1
+			}
+			else
+			{
+				y_offset--;
+				decision_over2 += 2 * (x_offset - y_offset) + 1;   // Change for y_offset -> y_offset-1
+			}
+		}
+	}
+	else
+	{
+		for (int w = 0; w < radius * 2; w++)
+		{
+			for (int h = 0; h < radius * 2; h++)
+			{
+				int dx = radius - w; // horizontal offset
+				int dy = radius - h; // vertical offset
+				if ((dx*dx + dy*dy) <= (radius * radius))
+				{
+					SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+				}
+			}
+		}
+	}
+}
+
+// Function to fill a rectangle with rounded corners
+void SDL::rectRounded(SDL_Rect rect, int cornerRadius, SDL_Color color, bool draw)
+{
+	SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+    // Draw the main filled rectangle without the corners
+    SDL_Rect innerRect = {rect.x + cornerRadius, rect.y, rect.w - 2 * cornerRadius, rect.h};
+    if (draw)
+		SDL_RenderDrawRect(m_renderer, &innerRect);
+	else
+		SDL_RenderFillRect(m_renderer, &innerRect);
+
+    innerRect = {rect.x, rect.y + cornerRadius, rect.w, rect.h - 2 * cornerRadius};
+    if (draw)
+		SDL_RenderDrawRect(m_renderer, &innerRect);
+	else
+		SDL_RenderFillRect(m_renderer, &innerRect);
+
+    // Draw the four corners
+    drawFilledCircle(m_renderer, rect.x + cornerRadius, rect.y + cornerRadius, cornerRadius, !draw); // Top-left corner
+    drawFilledCircle(m_renderer, rect.x + rect.w - cornerRadius - 1, rect.y + cornerRadius, cornerRadius, !draw); // Top-right corner
+    drawFilledCircle(m_renderer, rect.x + cornerRadius, rect.y + rect.h - cornerRadius - 1, cornerRadius, !draw); // Bottom-left corner
+    drawFilledCircle(m_renderer, rect.x + rect.w - cornerRadius - 1, rect.y + rect.h - cornerRadius - 1, cornerRadius, !draw); // Bottom-right corner
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+
+    if (draw)
+	{ 	innerRect = {rect.x + cornerRadius, rect.y + 1, rect.w - 2 * cornerRadius, rect.h - 2};
+		SDL_RenderFillRect(m_renderer, &innerRect);
+		innerRect = {rect.x + 1, rect.y + cornerRadius, rect.w - 2, rect.h - 2 * cornerRadius};
+		SDL_RenderFillRect(m_renderer, &innerRect);
+	}
+}
