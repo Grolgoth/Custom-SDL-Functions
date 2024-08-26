@@ -3,7 +3,7 @@
 #include <SDL_mixer.h>
 #include <string>
 
-class Timer;
+class TimerManager;
 
 class Song
 {
@@ -22,6 +22,6 @@ class Song
 		static std::string songBeingPlayed;
 		std::string name;
 		Mix_Music* music;
-		Timer* timer;
+		TimerManager* timer;
 };
 #endif // SONG_H

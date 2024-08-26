@@ -21,7 +21,7 @@ Song::Song(std::string title, std::string path, int from, int size) : name(title
 		music = Mix_LoadMUS(path.c_str());
 	if (music == nullptr)
 		throw "Error loading song: " + title + " file: " + path;
-	timer = Timer::getTimer();
+	timer = new TimerManager();
 }
 
 Song::Song(Mix_Music* songInitialized)
@@ -29,7 +29,7 @@ Song::Song(Mix_Music* songInitialized)
 	if (songInitialized == nullptr)
 		throw "Can't create song. Parameter was not initialized.";
 	music = songInitialized;
-	timer = Timer::getTimer();
+	timer = new TimerManager();
 }
 
 Song::~Song()
