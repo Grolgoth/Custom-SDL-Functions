@@ -1,6 +1,7 @@
 #ifndef SDLOBJ_H
 #define SDLOBJ_H
-#include "custom_sdl_functions.h"
+#include <SDL.h>
+#include <string>
 
 class SDL
 {

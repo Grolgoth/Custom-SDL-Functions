@@ -1,7 +1,7 @@
 #ifndef CUSTOM_SDL_FUNCTIONS_H
 #define CUSTOM_SDL_FUNCTIONS_H
 #include <SDL.h>
-#include <iostream>
+#include <string>
 #include <vector>
 #include <SDL_mixer.h>
 

@@ -1,4 +1,5 @@
 #include "SDLObj.h"
+#include <iostream>
 #include <sdl_ttf_custom.h>
 #include <SDL_mixer.h>
 
