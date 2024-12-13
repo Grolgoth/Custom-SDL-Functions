@@ -546,10 +546,10 @@ void erase_surface(SDL_Surface* target, SDL_Rect* clip)
 void set_color(SDL_Surface *surface, SDL_Color source, SDL_Color targetColor)
 {
 	SDL_Color* colors = surface->format->palette->colors;
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < surface->format->palette->ncolors; i++)
 		if (colors[i].r == source.r && colors[i].g == source.g && colors[i].b == source.b && colors[i].a > 127)
 			colors[i] = targetColor;
-	SDL_SetPaletteColors(surface->format->palette, colors, 0 , 256);
+	SDL_SetPaletteColors(surface->format->palette, colors, 0, surface->format->palette->ncolors);
 }
 
 void shift_pixels_vertical(SDL_Surface* target, bool up, SDL_Rect* clip)
