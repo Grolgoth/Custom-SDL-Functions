@@ -1,6 +1,7 @@
 #include "custom_sdl_functions.h"
 #include <cmath>
 #include <fstream>
+#include <iostream>
 
 //NON DEFINED FUCTIONS
 
@@ -40,7 +41,7 @@ void checkSurface(SDL_Surface* target, bool colorKey)
 		const char* sdlError = SDL_GetError();
 		for (unsigned int i = 0; i < SDL_strlen(sdlError); i ++)
 			error += SDL_GetError()[i];
-		throw error;
+		std::cout <<  error << std::endl;
 	}
 }
 
@@ -349,7 +350,7 @@ SDL_Surface* BMPFromFile(std::string filename, unsigned int from, unsigned int s
     free(buffer);
     checkSurface(test, colorkey);
 	if (test == nullptr)
-		throw "Error loading music! byte position parameters are probably incorrect.";
+		std::cout << "Error loading music! byte position parameters are probably incorrect. " << Mix_GetError() << std::endl;
     return test;
 }
 
@@ -364,7 +365,7 @@ Mix_Chunk* soundFromFile(std::string filename, unsigned int from, unsigned int s
 	Mix_Chunk *test = Mix_LoadWAV_RW(soundWop, 1);
     free(buffer);
     if (test == nullptr)
-		throw "Error loading sound! byte position parameters are probably incorrect.";
+		std::cout << "Error loading sound! byte position parameters are probably incorrect. " << Mix_GetError() << std::endl;
     return test;
 }
 
@@ -418,7 +419,13 @@ SDL_Texture* duplicateTexture(SDL_Texture* source, SDL_Renderer* renderer, SDL_R
 
     SDL_Texture* duplicate = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, width, height);
     if (!duplicate)
-        throw SDL_GetError();
+	{
+		std::string error = "";
+		const char* sdlError = SDL_GetError();
+		for (unsigned int i = 0; i < SDL_strlen(sdlError); i ++)
+			error += SDL_GetError()[i];
+		std::cout <<  error << std::endl;
+	}
 
 	SDL_SetRenderTarget(renderer, duplicate);
 	SDL_RenderCopy(renderer, source, clip, nullptr);
@@ -661,7 +668,7 @@ void shift_pixels_horizontal(SDL_Surface* target, bool right, SDL_Rect* clip)
 void spin_surface(SDL_Surface* target, unsigned int degrees, SDL_Rect* clip)
 {
 	if (target->pitch > 150)
-		throw "Error: Due to sdl_functionality such as pixel pitch which creates skewed representations of rows and columns in a surface's pixel array this function should not be used for large images.";
+		std::cout << "Error: Due to sdl_functionality such as pixel pitch which creates skewed representations of rows and columns in a surface's pixel array this function should not be used for large images." << std::endl;
 	int w(0), h(0), yInTarget(0), xInTarget(0), steps(0);
 	if (degrees > 360)
 		degrees = 360;

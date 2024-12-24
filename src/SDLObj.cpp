@@ -20,7 +20,10 @@ SDL::~SDL()
 	SDL_DestroyWindow(m_window);
     SDL_DestroyRenderer(m_renderer);
     if (withMixer)
+	{
+		Mix_CloseAudio();
 		Mix_Quit();
+	}
     TTF_Quit();
     SDL_Quit();
 }
@@ -89,7 +92,7 @@ void SDL::createWindow()
 	}
 	Uint32 windowFlags = SDL_WINDOW_SHOWN;
 	if (resizeable)
-		windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED;
+		windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
 	m_window = SDL_CreateWindow(winName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINW, WINH, windowFlags); //possibly use settings for fullscreen, resizable window etc
 }
 
